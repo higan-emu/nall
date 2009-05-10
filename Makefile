@@ -1,4 +1,4 @@
-# Makefile.string
+# Makefile
 # author: byuu
 # license: public domain
 
@@ -7,8 +7,48 @@
 [0-9] = 0 1 2 3 4 5 6 7 8 9
 [markup] = ` ~ ! @ \# $$ % ^ & * ( ) - _ = + [ { ] } \ | ; : ' " , < . > / ?
 [all] = $([A-Z]) $([a-z]) $([0-9]) $([markup])
-[space] := 
+[space] :=
 [space] +=
+
+#####
+# platform detection
+#####
+
+ifeq ($(platform),)
+  uname := $(shell uname -a)
+  ifeq ($(uname),)
+    platform := win
+    delete = del $(subst /,\,$1)
+  else ifneq ($(findstring Darwin,$(uname)),)
+    platform := osx
+    delete = rm -f $1
+  else
+    platform := x
+    delete = rm -f $1
+  endif
+endif
+
+ifeq ($(compiler),)
+  compiler := gcc
+endif
+
+ifeq ($(prefix),)
+  prefix := /usr/local
+endif
+
+#####
+# function rwildcard(directory, pattern)
+#####
+rwildcard = \
+  $(strip \
+    $(filter $(if $2,$2,%), \
+      $(foreach f, \
+        $(wildcard $1*), \
+        $(eval t = $(call rwildcard,$f/)) \
+        $(if $t,$t,$f) \
+      ) \
+    ) \
+  )
 
 #####
 # function strtr(source, from, to)
@@ -61,3 +101,9 @@ streq = $(if $(filter-out xx,x$(subst $1,,$2)$(subst $2,,$1)x),,1)
 # function strne(source)
 #####
 strne = $(if $(filter-out xx,x$(subst $1,,$2)$(subst $2,,$1)x),1,)
+
+#####
+# function ifhas(needle, haystack, true, false)
+#####
+ifhas = $(if $(findstring $1,$2),$3,$4)
+
