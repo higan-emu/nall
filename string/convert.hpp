@@ -1,4 +1,5 @@
-#ifdef NALL_STRING_CPP
+#ifndef NALL_STRING_CONVERT_HPP
+#define NALL_STRING_CONVERT_HPP
 
 char* strlower(char *str) {
   if(!str) return 0;

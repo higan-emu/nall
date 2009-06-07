@@ -1,4 +1,7 @@
-#ifdef NALL_STRING_CPP
+#ifndef NALL_STRING_REPLACE_HPP
+#define NALL_STRING_REPLACE_HPP
+
+namespace nall {
 
 string& string::replace(const char *key, const char *token) {
   int i, z, ksl = strlen(key), tsl = strlen(token), ssl = length();
@@ -94,5 +97,7 @@ string& string::qreplace(const char *key, const char *token) {
 
   return *this;
 }
+
+};
 
 #endif

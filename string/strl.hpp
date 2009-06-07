@@ -1,4 +1,5 @@
-#ifdef NALL_STRING_CPP
+#ifndef NALL_STRING_STRL_HPP
+#define NALL_STRING_STRL_HPP
 
 //strlcpy, strlcat based on OpenBSD implementation by Todd C. Miller
 

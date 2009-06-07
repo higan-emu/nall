@@ -1,4 +1,5 @@
-#ifdef NALL_STRING_CPP
+#ifndef NALL_STRING_UTILITY_HPP
+#define NALL_STRING_UTILITY_HPP
 
 size_t strlcpy(nall::string &dest, const char *src, size_t length) {
   dest.reserve(length);

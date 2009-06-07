@@ -1,4 +1,5 @@
-#ifdef NALL_STRING_CPP
+#ifndef NALL_STRING_TRIM_HPP
+#define NALL_STRING_TRIM_HPP
 
 char* ltrim(char *str, const char *key) {
   if(!key || !*key) return str;

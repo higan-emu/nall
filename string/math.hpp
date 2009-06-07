@@ -1,4 +1,5 @@
-#ifdef NALL_STRING_CPP
+#ifndef NALL_STRING_MATH_HPP
+#define NALL_STRING_MATH_HPP
 
 static int eval_integer(const char *&s) {
   if(!*s) throw "unrecognized_integer";

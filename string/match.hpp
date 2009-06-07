@@ -1,4 +1,5 @@
-#ifdef NALL_STRING_CPP
+#ifndef NALL_STRING_MATCH_HPP
+#define NALL_STRING_MATCH_HPP
 
 bool match(const char *p, const char *s) {
   const char *p_ = 0, *s_ = 0;

@@ -1,4 +1,7 @@
-#ifdef NALL_STRING_CPP
+#ifndef NALL_STRING_SPLIT_HPP
+#define NALL_STRING_SPLIT_HPP
+
+namespace nall {
 
 void lstring::split(const char *key, const char *src, unsigned limit) {
   reset();
@@ -47,5 +50,7 @@ void lstring::qsplit(const char *key, const char *src, unsigned limit) {
 
   operator[](split_count++) = src + lp;
 }
+
+};
 
 #endif

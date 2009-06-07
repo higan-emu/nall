@@ -1,4 +1,5 @@
-#ifdef NALL_STRING_CPP
+#ifndef NALL_STRING_COMPARE_HPP
+#define NALL_STRING_COMPARE_HPP
 
 char chrlower(char c) {
   return (c >= 'A' && c <= 'Z') ? c + ('a' - 'A') : c;
