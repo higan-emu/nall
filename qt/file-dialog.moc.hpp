@@ -1,10 +1,32 @@
 #ifndef NALL_QT_FILEDIALOG_HPP
 #define NALL_QT_FILEDIALOG_HPP
 
+#include <nall/platform.hpp>
 #include <nall/string.hpp>
 #include <nall/qt/window.moc.hpp>
 
 namespace nall {
+
+class FileDialog;
+
+class NewFolderDialog : public Window {
+  Q_OBJECT
+
+public:
+  void show();
+  NewFolderDialog(FileDialog*);
+
+protected slots:
+  void createFolderAction();
+
+protected:
+  FileDialog *parent;
+  QVBoxLayout *layout;
+  QLineEdit *folderNameEdit;
+  QHBoxLayout *controlLayout;
+  QPushButton *okButton;
+  QPushButton *cancelButton;
+};
 
 class FileView : public QListView {
   Q_OBJECT
@@ -43,11 +65,13 @@ protected slots:
   void fileViewActivate(const QModelIndex&);
   void pathBoxChanged();
   void filterBoxChanged();
+  void createNewFolder();
   void browseUp();
   void acceptAction();
   void rejectAction();
 
 protected:
+  NewFolderDialog *newFolderDialog;
   QVBoxLayout *layout;
   QHBoxLayout *navigationLayout;
   QComboBox *pathBox;
@@ -63,9 +87,56 @@ protected:
   QPushButton *optionsButton;
   QPushButton *acceptButton;
   QPushButton *rejectButton;
-
   bool lock;
+  void createFolderAction(const string &name);
+  void closeEvent(QCloseEvent*);
+
+  friend class NewFolderDialog;
 };
+
+inline void NewFolderDialog::show() {
+  folderNameEdit->setText("");
+  Window::show();
+  folderNameEdit->setFocus();
+}
+
+inline void NewFolderDialog::createFolderAction() {
+  string name = folderNameEdit->text().toUtf8().constData();
+  if(name == "") {
+    folderNameEdit->setFocus();
+  } else {
+    parent->createFolderAction(name);
+    close();
+  }
+}
+
+inline NewFolderDialog::NewFolderDialog(FileDialog *fileDialog) : parent(fileDialog) {
+  setMinimumWidth(240);
+  setWindowTitle("Create New Folder");
+
+  layout = new QVBoxLayout;
+  layout->setAlignment(Qt::AlignTop);
+  layout->setMargin(5);
+  layout->setSpacing(5);
+  setLayout(layout);
+
+  folderNameEdit = new QLineEdit;
+  layout->addWidget(folderNameEdit);
+
+  controlLayout = new QHBoxLayout;
+  controlLayout->setAlignment(Qt::AlignRight);
+  layout->addLayout(controlLayout);
+
+  okButton = new QPushButton("Ok");
+  controlLayout->addWidget(okButton);
+
+  cancelButton = new QPushButton("Cancel");
+  controlLayout->addWidget(cancelButton);
+
+  connect(folderNameEdit, SIGNAL(returnPressed()), this, SLOT(createFolderAction()));
+  connect(okButton, SIGNAL(released()), this, SLOT(createFolderAction()));
+  connect(cancelButton, SIGNAL(released()), this, SLOT(close()));
+}
 
 inline void FileView::currentChanged(const QModelIndex &current, const QModelIndex &previous) {
   QAbstractItemView::currentChanged(current, previous);
@@ -151,12 +222,17 @@ inline void FileDialog::filterBoxChanged() {
   }
 }
 
+inline void FileDialog::createNewFolder() {
+  newFolderDialog->show();
+}
+
 inline void FileDialog::browseUp() {
   if(pathBox->count() > 1) pathBox->setCurrentIndex(1);
 }
 
 inline void FileDialog::setPath(string path) {
   lock = true;
+  newFolderDialog->close();
 
   if(QDir(path).exists()) {
     newFolderButton->setEnabled(true);
@@ -218,10 +294,24 @@ inline void FileDialog::rejectAction() {
   close();
 }
 
+inline void FileDialog::createFolderAction(const string &name) {
+  string path = fileSystemModel->rootPath().toUtf8().constData();
+  path << "/" << notdir(name);
+  mkdir(path, 0755);
+}
+
+inline void FileDialog::closeEvent(QCloseEvent *event) {
+  newFolderDialog->close();
+  Window::closeEvent(event);
+}
+
 inline FileDialog::FileDialog() {
+  newFolderDialog = new NewFolderDialog(this);
   resize(640, 360);
 
   layout = new QVBoxLayout;
+  layout->setMargin(5);
+  layout->setSpacing(5);
   setLayout(layout);
 
   navigationLayout = new QHBoxLayout;
@@ -285,10 +375,12 @@ inline FileDialog::FileDialog() {
 
   lock = false;
   connect(pathBox, SIGNAL(currentIndexChanged(int)), this, SLOT(pathBoxChanged()));
+  connect(newFolderButton, SIGNAL(released()), this, SLOT(createNewFolder()));
   connect(upFolderButton, SIGNAL(released()), this, SLOT(browseUp()));
   connect(fileView, SIGNAL(changed(const QModelIndex&)), this, SLOT(fileViewChange(const QModelIndex&)));
   connect(fileView, SIGNAL(activated(const QModelIndex&)), this, SLOT(fileViewActivate(const QModelIndex&)));
   connect(fileView, SIGNAL(browseUp()), this, SLOT(browseUp()));
+  connect(fileNameEdit, SIGNAL(returnPressed()), this, SLOT(acceptAction()));
   connect(filterBox, SIGNAL(currentIndexChanged(int)), this, SLOT(filterBoxChanged()));
   connect(acceptButton, SIGNAL(released()), this, SLOT(acceptAction()));
   connect(rejectButton, SIGNAL(released()), this, SLOT(rejectAction()));
