@@ -1,5 +1,5 @@
-#ifndef NALL_INFO_SNES_HPP
-#define NALL_INFO_SNES_HPP
+#ifndef NALL_SNES_INFO_HPP
+#define NALL_SNES_INFO_HPP
 
 namespace nall {
 
