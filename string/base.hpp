@@ -52,7 +52,7 @@ namespace nall {
     char *data;
     unsigned size;
 
-  #if defined(QT_CORE_LIB)
+  #if defined(QSTRING_H)
   public:
     inline operator QString() const;
   #endif

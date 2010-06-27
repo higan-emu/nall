@@ -127,7 +127,7 @@ double strdouble(const char *str) {
   while(*str) {
     uint8_t x = *str++;
     if(x >= '0' && x <= '9') x -= '0';
-    else if(x == '.') break;  //break loop and read fractional part
+    else if(x == '.' || x == ',') break;  //break loop and read fractional part
     else return (double)result_integral;  //invalid value, assume no fractional part
     result_integral = result_integral * 10 + x;
   }

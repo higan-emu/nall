@@ -113,16 +113,23 @@ snes_information::snes_information(const uint8_t *data, unsigned size) {
 
   if(type == TypeBsx) {
     xml << "<cartridge/>";
+    xml_memory_map = xml;
     return;
-  } else if(type == TypeSufamiTurbo) {
+  }
+
+  if(type == TypeSufamiTurbo) {
     xml << "<cartridge/>";
+    xml_memory_map = xml;
     return;
-  } else if(type == TypeGameBoy) {
+  }
+
+  if(type == TypeGameBoy) {
     xml << "<cartridge rtc='" << gameboy_has_rtc(data, size) << "'>\n";
     if(gameboy_ram_size(data, size) > 0) {
       xml << "  <ram size='" << strhex(gameboy_ram_size(data, size)) << "'/>\n";
     }
     xml << "</cartridge>\n";
+    xml_memory_map = xml;
     return;
   }
 

@@ -8,6 +8,8 @@
 #include <nall/algorithm.hpp>
 #include <nall/bit.hpp>
 #include <nall/concept.hpp>
+#include <nall/foreach.hpp>
+#include <nall/utility.hpp>
 
 namespace nall {
   //dynamic vector array
@@ -48,13 +50,32 @@ namespace nall {
       return pool;
     }
 
-    void add(const T data) {
+    void append(const T data) {
       operator[](buffersize) = data;
     }
 
-    signed find(const T data) {
-      for(unsigned i = 0; i < size(); i++) if(pool[i] == data) return i;
-      return -1;  //not found
+    template<typename U> void insert(unsigned index, const U list) {
+      unsigned listsize = container_size(list);
+      resize(buffersize + listsize);
+      memmove(pool + index + listsize, pool + index, (buffersize - index) * sizeof(T));
+      foreach(item, list) pool[index++] = item;
+    }
+
+    void insert(unsigned index, const T item) {
+      insert(index, array<T>{ item });
+    }
+
+    void remove(unsigned index, unsigned count = 1) {
+      for(unsigned i = index; count + i < buffersize; i++) {
+        pool[i] = pool[count + i];
+      }
+      if(count + index >= buffersize) resize(index);  //every element >= index was removed
+      else resize(buffersize - count);
+    }
+
+    optional<unsigned> find(const T data) {
+      for(unsigned i = 0; i < size(); i++) if(pool[i] == data) return { true, i };
+      return { false, 0 };
     }
 
     void clear() {
@@ -65,7 +86,7 @@ namespace nall {
     }
 
     array(std::initializer_list<T> list) : pool(0), poolsize(0), buffersize(0) {
-      for(const T *p = list.begin(); p != list.end(); ++p) add(*p);
+      for(const T *p = list.begin(); p != list.end(); ++p) append(*p);
     }
 
     ~array() {

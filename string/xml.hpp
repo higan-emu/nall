@@ -141,7 +141,7 @@ inline bool xml_element::parse_head(string data) {
     if(strbegin(attr.content, "\"") && strend(attr.content, "\"")) trim_once(attr.content, "\"");
     else if(strbegin(attr.content, "'") && strend(attr.content, "'")) trim_once(attr.content, "'");
     else throw "...";
-    attribute.add(attr);
+    attribute.append(attr);
   }
 }
 
@@ -219,7 +219,7 @@ inline bool xml_element::parse_body(const char *&data) {
           return true;
         }
       } else {
-        element.add(node);
+        element.append(node);
       }
     }
   }
@@ -248,7 +248,7 @@ inline xml_element xml_parse(const char *data) {
       if(node.parse_body(data) == false) {
         break;
       } else {
-        self.element.add(node);
+        self.element.append(node);
       }
     }
 

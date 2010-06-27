@@ -21,7 +21,7 @@ template<typename T> lstring& lstring::operator<<(T value) {
   return *this;
 }
 
-#if defined(QT_CORE_LIB)
+#if defined(QSTRING_H)
 template<> inline string to_string<QString>(QString v) { return v.toUtf8().constData(); }
 template<> inline string to_string<const QString&>(const QString &v) { return v.toUtf8().constData(); }
 string::operator QString() const { return QString::fromUtf8(*this); }

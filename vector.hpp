@@ -8,6 +8,7 @@
 #include <nall/algorithm.hpp>
 #include <nall/bit.hpp>
 #include <nall/concept.hpp>
+#include <nall/foreach.hpp>
 #include <nall/utility.hpp>
 
 namespace nall {
@@ -68,9 +69,29 @@ namespace nall {
       objectsize = newsize;
     }
 
-    void add(const T data) {
+    void append(const T data) {
       if(objectsize + 1 > poolsize) reserve(objectsize + 1);
       new(pool + objectsize++) T(data);
+    }
+
+    template<typename U> void insert(unsigned index, const U list) {
+      linear_vector<T> merged;
+      for(unsigned i = 0; i < index; i++) merged.append(pool[i]);
+      foreach(item, list) merged.append(item);
+      for(unsigned i = index; i < objectsize; i++) merged.append(pool[i]);
+      operator=(merged);
+    }
+
+    void insert(unsigned index, const T item) {
+      insert(index, linear_vector<T>{ item });
+    }
+
+    void remove(unsigned index, unsigned count = 1) {
+      for(unsigned i = index; count + i < objectsize; i++) {
+        pool[i] = pool[count + i];
+      }
+      if(count + index >= objectsize) resize(index);  //every element >= index was removed
+      else resize(objectsize - count);
     }
 
     inline T& operator[](unsigned index) {
@@ -116,7 +137,7 @@ namespace nall {
     }
 
     linear_vector(std::initializer_list<T> list) : pool(0), poolsize(0), objectsize(0) {
-      for(const T *p = list.begin(); p != list.end(); ++p) add(*p);
+      for(const T *p = list.begin(); p != list.end(); ++p) append(*p);
     }
 
     ~linear_vector() {
@@ -176,9 +197,29 @@ namespace nall {
       objectsize = newsize;
     }
 
-    void add(const T data) {
+    void append(const T data) {
       if(objectsize + 1 > poolsize) reserve(objectsize + 1);
       pool[objectsize++] = new T(data);
+    }
+
+    template<typename U> void insert(unsigned index, const U list) {
+      pointer_vector<T> merged;
+      for(unsigned i = 0; i < index; i++) merged.append(*pool[i]);
+      foreach(item, list) merged.append(item);
+      for(unsigned i = index; i < objectsize; i++) merged.append(*pool[i]);
+      operator=(merged);
+    }
+
+    void insert(unsigned index, const T item) {
+      insert(index, pointer_vector<T>{ item });
+    }
+
+    void remove(unsigned index, unsigned count = 1) {
+      for(unsigned i = index; count + i < objectsize; i++) {
+        *pool[i] = *pool[count + i];
+      }
+      if(count + index >= objectsize) resize(index);  //every element >= index was removed
+      else resize(objectsize - count);
     }
 
     inline T& operator[](unsigned index) {
@@ -225,7 +266,7 @@ namespace nall {
     }
 
     pointer_vector(std::initializer_list<T> list) : pool(0), poolsize(0), objectsize(0) {
-      for(const T *p = list.begin(); p != list.end(); ++p) add(*p);
+      for(const T *p = list.begin(); p != list.end(); ++p) append(*p);
     }
 
     ~pointer_vector() {
