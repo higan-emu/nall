@@ -16,12 +16,19 @@
 namespace nall {
 
 struct directory {
+  static bool exists(const string &pathname);
   static lstring folders(const string &pathname, const string &pattern = "*");
   static lstring files(const string &pathname, const string &pattern = "*");
   static lstring contents(const string &pathname, const string &pattern = "*");
 };
 
 #if defined(_WIN32)
+  inline bool directory::exists(const string &pathname) {
+    DWORD result = GetFileAttributes(utf16_t(pathname));
+    if(result == INVALID_FILE_ATTRIBUTES) return false;
+    return (result & FILE_ATTRIBUTE_DIRECTORY);
+  }
+
   inline lstring directory::folders(const string &pathname, const string &pattern) {
     lstring list;
     string path = pathname;
@@ -85,6 +92,13 @@ struct directory {
     return folders;
   }
 #else
+  inline bool directory::exists(const string &pathname) {
+    DIR *dp = opendir(pathname);
+    if(!dp) return false;
+    closedir(dp);
+    return true;
+  }
+
   inline lstring directory::folders(const string &pathname, const string &pattern) {
     lstring list;
     DIR *dp;
