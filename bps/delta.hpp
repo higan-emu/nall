@@ -10,6 +10,9 @@
 namespace nall {
 
 struct bpsdelta {
+  inline void source(const uint8_t *data, unsigned size);
+  inline void target(const uint8_t *data, unsigned size);
+
   inline bool source(const string &filename);
   inline bool target(const string &filename);
   inline bool create(const string &filename, const string &metadata = "");
@@ -34,17 +37,25 @@ protected:
   unsigned targetSize;
 };
 
+void bpsdelta::source(const uint8_t *data, unsigned size) {
+  sourceData = data;
+  sourceSize = size;
+}
+
+void bpsdelta::target(const uint8_t *data, unsigned size) {
+  targetData = data;
+  targetSize = size;
+}
+
 bool bpsdelta::source(const string &filename) {
   if(sourceFile.open(filename, filemap::mode::read) == false) return false;
-  sourceData = sourceFile.data();
-  sourceSize = sourceFile.size();
+  source(sourceFile.data(), sourceFile.size());
   return true;
 }
 
 bool bpsdelta::target(const string &filename) {
   if(targetFile.open(filename, filemap::mode::read) == false) return false;
-  targetData = targetFile.data();
-  targetSize = targetFile.size();
+  target(targetFile.data(), targetFile.size());
   return true;
 }
 
@@ -85,11 +96,8 @@ bool bpsdelta::create(const string &filename, const string &metadata) {
   encode(markupSize);
   for(unsigned n = 0; n < markupSize; n++) write(metadata[n]);
 
-  Node *sourceTree[65536];
-  Node *targetTree[65536];
-
-  for(unsigned n = 0; n < 65536; n++) sourceTree[n] = 0;
-  for(unsigned n = 0; n < 65536; n++) targetTree[n] = 0;
+  Node *sourceTree[65536], *targetTree[65536];
+  for(unsigned n = 0; n < 65536; n++) sourceTree[n] = 0, targetTree[n] = 0;
 
   //source tree creation
   for(unsigned offset = 0; offset < sourceSize; offset++) {
@@ -118,6 +126,15 @@ bool bpsdelta::create(const string &filename, const string &metadata) {
     uint16_t symbol = targetData[outputOffset + 0];
     if(outputOffset < targetSize - 1) symbol |= targetData[outputOffset + 1] << 8;
 
+    { //source read
+      unsigned length = 0, offset = outputOffset;
+      while(offset < sourceSize && offset < targetSize && sourceData[offset] == targetData[offset]) {
+        length++;
+        offset++;
+      }
+      if(length > maxLength) maxLength = length, mode = SourceRead;
+    }
+
     { //source copy
       Node *node = sourceTree[symbol];
       while(node) {
@@ -142,15 +159,6 @@ bool bpsdelta::create(const string &filename, const string &metadata) {
       node->offset = outputOffset;
       node->next = targetTree[symbol];
       targetTree[symbol] = node;
-    }
-
-    { //source read
-      unsigned length = 0, offset = outputOffset;
-      while(offset < sourceSize && offset < targetSize && sourceData[offset] == targetData[offset]) {
-        length++;
-        offset++;
-      }
-      if(length > maxLength) maxLength = length, mode = SourceRead;
     }
 
     { //target read

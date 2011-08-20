@@ -18,6 +18,7 @@ struct bpspatch {
   inline bool source(const string &filename);
   inline bool target(const string &filename);
 
+  inline string metadata() const;
   inline unsigned size() const;
 
   enum result : unsigned {
@@ -49,11 +50,10 @@ protected:
   uint8_t *targetData;
   unsigned targetSize;
 
-public:
   unsigned modifySourceSize;
   unsigned modifyTargetSize;
   unsigned modifyMarkupSize;
-  string metadata;
+  string metadataString;
 };
 
 bool bpspatch::modify(const uint8_t *data, unsigned size) {
@@ -77,6 +77,12 @@ bool bpspatch::modify(const uint8_t *data, unsigned size) {
   modifySourceSize = decode();
   modifyTargetSize = decode();
   modifyMarkupSize = decode();
+
+  char buffer[modifyMarkupSize + 1];
+  for(unsigned n = 0; n < modifyMarkupSize; n++) buffer[n] = modifyData[offset++];
+  buffer[modifyMarkupSize] = 0;
+  metadataString = (const char*)buffer;
+
   return true;
 }
 
@@ -110,6 +116,10 @@ bool bpspatch::target(const string &filename) {
   if(targetFile.open(filename, filemap::mode::readwrite) == false) return false;
   target(targetFile.data(), targetFile.size());
   return true;
+}
+
+string bpspatch::metadata() const {
+  return metadataString;
 }
 
 unsigned bpspatch::size() const {
@@ -152,12 +162,8 @@ bpspatch::result bpspatch::apply() {
 
   modifySourceSize = decode();
   modifyTargetSize = decode();
-
   modifyMarkupSize = decode();
-  char data[modifyMarkupSize + 1];
-  for(unsigned n = 0; n < modifyMarkupSize; n++) data[n] = read();
-  data[modifyMarkupSize] = 0;
-  metadata = (const char*)data;
+  for(unsigned n = 0; n < modifyMarkupSize; n++) read();
 
   if(modifySourceSize > sourceSize) return result::source_too_small;
   if(modifyTargetSize > targetSize) return result::target_too_small;
