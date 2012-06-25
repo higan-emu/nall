@@ -45,7 +45,9 @@ GameBoyAdvanceCartridge::GameBoyAdvanceCartridge(const uint8_t *data, unsigned s
   }
   identifiers = list.concatenate(",");
 
-  markup = "<?xml version='1.0' encoding='UTF-8'?>\n";
+  markup = "";
+
+  markup.append("<?xml version='1.0' encoding='UTF-8'?>\n");
   markup.append("<cartridge sha256='", sha256(data, size), "'>\n");
   markup.append("  <rom name='program.rom' size='0x", hex(size), "'/>\n");
   if(0);

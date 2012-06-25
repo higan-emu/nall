@@ -20,12 +20,14 @@ struct FamicomCartridge {
 };
 
 FamicomCartridge::FamicomCartridge(const uint8_t *data, unsigned size) {
-  markup = "<?xml version='1.0' encoding='UTF-8'?>\n";
+  markup = "";
   if(size < 16) return;
   if(data[0] != 'N') return;
   if(data[1] != 'E') return;
   if(data[2] != 'S') return;
   if(data[3] !=  26) return;
+
+  markup.append("<?xml version='1.0' encoding='UTF-8'?>\n");
 
   mapper = ((data[7] >> 4) << 4) | (data[6] >> 4);
   mirror = ((data[6] & 0x08) >> 2) | (data[6] & 0x01);
