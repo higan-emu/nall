@@ -163,6 +163,7 @@ namespace nall {
   inline string realpath(const string &name);
   inline string userpath();
   inline string configpath();
+  inline string temppath();
 
   //strm.hpp
   inline unsigned strmcpy(char *target, const char *source, unsigned length);
