@@ -1,9 +1,9 @@
-#ifndef NALL_BPS_MULTI_HPP
-#define NALL_BPS_MULTI_HPP
+#ifndef NALL_BEAT_MULTI_HPP
+#define NALL_BEAT_MULTI_HPP
 
-#include <nall/bps/patch.hpp>
-#include <nall/bps/linear.hpp>
-#include <nall/bps/delta.hpp>
+#include <nall/beat/patch.hpp>
+#include <nall/beat/linear.hpp>
+#include <nall/beat/delta.hpp>
 
 namespace nall {
 
