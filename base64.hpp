@@ -3,117 +3,134 @@
 
 #include <nall/stdint.hpp>
 #include <nall/string.hpp>
+#include <nall/vector.hpp>
 
 namespace nall {
 
-struct base64 {
-  static bool encode(char*& output, const uint8_t* input, unsigned inlength) {
-    output = new char[inlength * 8 / 6 + 8]();
+struct Base64 {
+  enum class Format : unsigned { MIME, URI };
 
-    unsigned i = 0, o = 0;
-    while(i < inlength) {
-      switch(i % 3) {
+  inline static string encode(const uint8_t* data, unsigned size, Format format = Format::MIME);
+  inline static string encode(const vector<uint8_t>& buffer, Format format = Format::MIME);
+  inline static string encode(const string& text, Format format = Format::MIME);
 
-      case 0: {
-        output[o++] = enc(input[i] >> 2);
-        output[o] = enc((input[i] & 3) << 4);
-        break;
-      }
-
-      case 1: {
-        uint8_t prev = dec(output[o]);
-        output[o++] = enc(prev + (input[i] >> 4));
-        output[o] = enc((input[i] & 15) << 2);
-        break;
-      }
-
-      case 2: {
-        uint8_t prev = dec(output[o]);
-        output[o++] = enc(prev + (input[i] >> 6));
-        output[o++] = enc(input[i] & 63);
-        break;
-      }
-
-      }
-
-      i++;
-    }
-
-    return true;
-  }
-
-  static string encode(const string& data) {
-    char* buffer = nullptr;
-    encode(buffer, (const uint8_t*)(const char*)data, data.length());
-    string result = buffer;
-    delete[] buffer;
-    return result;
-  }
-
-  static bool decode(uint8_t*& output, unsigned& outlength, const char* input) {
-    unsigned inlength = strlen(input), infix = 0;
-    output = new uint8_t[inlength + 1]();
-
-    unsigned i = 0, o = 0;
-    while(i < inlength) {
-      uint8_t x = dec(input[i]);
-
-      switch(i++ & 3) {
-
-      case 0: {
-        output[o] = x << 2;
-        break;
-      }
-
-      case 1: {
-        output[o++] |= x >> 4;
-        output[o] = (x & 15) << 4;
-        break;
-      }
-
-      case 2: {
-        output[o++] |= x >> 2;
-        output[o] = (x & 3) << 6;
-        break;
-      }
-
-      case 3: {
-        output[o++] |= x;
-        break;
-      }
-
-      }
-    }
-
-    outlength = o;
-    return true;
-  }
-
-  static string decode(const string& data) {
-    uint8_t* buffer = nullptr;
-    unsigned size = 0;
-    decode(buffer, size, (const char*)data);
-    string result = (const char*)buffer;
-    delete[] buffer;
-    return result;
-  }
+  inline static vector<uint8_t> decode(const string& text);
 
 private:
-  static char enc(uint8_t n) {
-    //base64 for URL encodings (URL = -_, MIME = +/)
-    static char lookup_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-    return lookup_table[n & 63];
+  inline static void table(char* data, Format format);
+  inline static uint8_t value(char data);
+};
+
+string Base64::encode(const uint8_t* data, unsigned size, Format format) {
+  vector<uint8_t> result;
+
+  char lookup[65];
+  table(lookup, format);
+
+  unsigned overflow = (3 - (size % 3)) % 3;  //bytes to round to nearest multiple of 3
+  uint8_t buffer;
+
+  for(unsigned i = 0; i < size; i++) {
+    switch(i % 3) {
+    case 0:
+      buffer = data[i] >> 2;
+      result.append(lookup[buffer]);
+      buffer = (data[i] & 3) << 4;
+      result.append(lookup[buffer]);
+      break;
+
+    case 1:
+      buffer |= data[i] >> 4;
+      result.last() = lookup[buffer];
+      buffer = (data[i] & 15) << 2;
+      result.append(lookup[buffer]);
+      break;
+
+    case 2:
+      buffer |= data[i] >> 6;
+      result.last() = lookup[buffer];
+      buffer = (data[i] & 63);
+      result.append(lookup[buffer]);
+      break;
+    }
   }
 
-  static uint8_t dec(char n) {
-    if(n >= 'A' && n <= 'Z') return n - 'A';
-    if(n >= 'a' && n <= 'z') return n - 'a' + 26;
-    if(n >= '0' && n <= '9') return n - '0' + 52;
-    if(n == '-') return 62;
-    if(n == '_') return 63;
-    return 0;
+  if(lookup[64]) {
+    if(overflow >= 1) result.append(lookup[64]);
+    if(overflow >= 2) result.append(lookup[64]);
   }
-};
+
+  return result;
+}
+
+string Base64::encode(const vector<uint8_t>& buffer, Format format) {
+  return encode(buffer.data(), buffer.size(), format);
+}
+
+string Base64::encode(const string& text, Format format) {
+  return encode((const uint8_t*)text.data(), text.size(), format);
+}
+
+vector<uint8_t> Base64::decode(const string& text) {
+  vector<uint8_t> result;
+
+  uint8_t buffer, output;
+  for(unsigned i = 0; i < text.size(); i++) {
+    uint8_t buffer = value(text[i]);
+    if(buffer == 0) break;
+
+    switch(i & 3) {
+    case 0:
+      output = buffer << 2;
+      break;
+
+    case 1:
+      result.append(output | buffer >> 4);
+      output = (buffer & 15) << 4;
+      break;
+
+    case 2:
+      result.append(output | buffer >> 2);
+      output = (buffer & 3) << 6;
+      break;
+
+    case 3:
+      result.append(output | buffer);
+      break;
+    }
+  }
+
+  return result;
+}
+
+void Base64::table(char* data, Format format) {
+  for(unsigned n = 0; n < 26; n++) data[ 0 + n] = 'A' + n;
+  for(unsigned n = 0; n < 26; n++) data[26 + n] = 'a' + n;
+  for(unsigned n = 0; n < 10; n++) data[52 + n] = '0' + n;
+
+  switch(format) {
+  case Format::MIME:
+    data[62] = '+';
+    data[63] = '/';
+    data[64] = '=';
+    break;
+
+  case Format::URI:
+    data[62] = '-';
+    data[63] = '_';
+    data[64] = 0;
+    break;
+  }
+}
+
+uint8_t Base64::value(char n) {
+  if(n >= 'A' && n <= 'Z') return n - 'A' +  0;
+  if(n >= 'a' && n <= 'z') return n - 'a' + 26;
+  if(n >= '0' && n <= '9') return n - '0' + 52;
+  if(n == '+' || n == '-') return 62;
+  if(n == '/' || n == '_') return 63;
+  return 0;
+}
 
 }
 

@@ -15,9 +15,9 @@ template<> struct stringify<bool> {
 };
 
 template<> struct stringify<char> {
-  char data[256];
+  char data[2];
   operator const char*() const { return data; }
-  stringify(char value) { integer(data, value); }
+  stringify(char value) { data[0] = value, data[1] = 0; }
 };
 
 // signed integers
