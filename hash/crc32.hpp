@@ -1,11 +1,13 @@
-#ifndef NALL_CRC32_HPP
-#define NALL_CRC32_HPP
+#ifndef NALL_HASH_CRC32_HPP
+#define NALL_HASH_CRC32_HPP
 
-#include <nall/stdint.hpp>
+#include <nall/range.hpp>
 
 namespace nall {
+struct string;
+namespace Hash {
 
-const uint32_t crc32_table[256] = {
+const uint32_t _crc32_table[256] = {
   0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
   0xe963a535, 0x9e6495a3, 0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
   0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91, 0x1db71064, 0x6ab020f2,
@@ -48,21 +50,36 @@ const uint32_t crc32_table[256] = {
   0x40df0b66, 0x37d83bf0, 0xa9bcae53, 0xdebb9ec5, 0x47b2cf7f, 0x30b5ffe9,
   0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605, 0xcdd70693,
   0x54de5729, 0x23d967bf, 0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94,
-  0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
+  0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d,
 };
 
-inline uint32_t crc32_adjust(uint32_t crc32, uint8_t input) {
-  return ((crc32 >> 8) & 0x00ffffff) ^ crc32_table[(crc32 ^ input) & 0xff];
-}
+struct CRC32 {
+  CRC32() { reset(); }
+  CRC32(const void* values, unsigned size) : CRC32() { data(values, size); }
 
-inline uint32_t crc32_calculate(const uint8_t* data, unsigned length) {
-  uint32_t crc32 = ~0;
-  for(unsigned i = 0; i < length; i++) {
-    crc32 = crc32_adjust(crc32, data[i]);
+  auto reset() -> void {
+    checksum = ~0;
   }
-  return ~crc32;
-}
 
-}
+  auto data(uint8_t value) -> void {
+    checksum = ((checksum >> 8) & 0xffffff) ^ _crc32_table[(checksum ^ value) & 0xff];
+  }
+
+  auto data(const void* values, unsigned size) -> void {
+    auto p = (const uint8_t*)values;
+    while(size--) data(*p++);
+  }
+
+  auto value() const -> uint32_t {
+    return ~checksum;
+  }
+
+  inline auto digest() -> string;
+
+private:
+  uint32_t checksum;
+};
+
+}}
 
 #endif

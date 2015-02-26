@@ -1,15 +1,12 @@
-#ifndef NALL_PNG_HPP
-#define NALL_PNG_HPP
+#ifndef NALL_DECODE_PNG_HPP
+#define NALL_DECODE_PNG_HPP
 
-//PNG image decoder
-//author: byuu
-
-#include <nall/inflate.hpp>
 #include <nall/string.hpp>
+#include <nall/decode/inflate.hpp>
 
-namespace nall {
+namespace nall { namespace Decode {
 
-struct png {
+struct PNG {
   struct Info {
     unsigned width;
     unsigned height;
@@ -39,8 +36,8 @@ struct png {
   inline unsigned readbits(const uint8_t*& data);
   unsigned bitpos = 0;
 
-  inline png();
-  inline ~png();
+  inline PNG();
+  inline ~PNG();
 
 protected:
   enum class FourCC : unsigned {
@@ -57,14 +54,14 @@ protected:
   inline unsigned read(const uint8_t* data, unsigned length);
 };
 
-bool png::decode(const string& filename) {
+bool PNG::decode(const string& filename) {
   if(auto memory = file::read(filename)) {
     return decode(memory.data(), memory.size());
   }
   return false;
 }
 
-bool png::decode(const uint8_t* sourceData, unsigned sourceSize) {
+bool PNG::decode(const uint8_t* sourceData, unsigned sourceSize) {
   if(sourceSize < 8) return false;
   if(read(sourceData + 0, 4) != 0x89504e47) return false;
   if(read(sourceData + 4, 4) != 0x0d0a1a0a) return false;
@@ -170,7 +167,7 @@ bool png::decode(const uint8_t* sourceData, unsigned sourceSize) {
   return true;
 }
 
-unsigned png::interlace(unsigned pass, unsigned index) {
+unsigned PNG::interlace(unsigned pass, unsigned index) {
   static const unsigned data[7][4] = {
     //x-distance, y-distance, x-origin, y-origin
     {8, 8, 0, 0},
@@ -184,7 +181,7 @@ unsigned png::interlace(unsigned pass, unsigned index) {
   return data[pass][index];
 }
 
-unsigned png::inflateSize() {
+unsigned PNG::inflateSize() {
   if(info.interlaceMethod == 0) {
     return info.width * info.height * info.bytesPerPixel + info.height;
   }
@@ -201,7 +198,7 @@ unsigned png::inflateSize() {
   return size;
 }
 
-bool png::deinterlace(const uint8_t*& inputData, unsigned pass) {
+bool PNG::deinterlace(const uint8_t*& inputData, unsigned pass) {
   unsigned xd = interlace(pass, 0), yd = interlace(pass, 1);
   unsigned xo = interlace(pass, 2), yo = interlace(pass, 3);
   unsigned width  = (info.width  + (xd - xo - 1)) / xd;
@@ -227,7 +224,7 @@ bool png::deinterlace(const uint8_t*& inputData, unsigned pass) {
   return result;
 }
 
-bool png::filter(uint8_t* outputData, const uint8_t* inputData, unsigned width, unsigned height) {
+bool PNG::filter(uint8_t* outputData, const uint8_t* inputData, unsigned width, unsigned height) {
   uint8_t* wr = outputData;
   const uint8_t* rd = inputData;
   int bpp = info.bytesPerPixel, pitch = width * bpp;
@@ -290,13 +287,13 @@ bool png::filter(uint8_t* outputData, const uint8_t* inputData, unsigned width, 
   return true;
 }
 
-unsigned png::read(const uint8_t* data, unsigned length) {
+unsigned PNG::read(const uint8_t* data, unsigned length) {
   unsigned result = 0;
   while(length--) result = (result << 8) | (*data++);
   return result;
 }
 
-unsigned png::readbits(const uint8_t*& data) {
+unsigned PNG::readbits(const uint8_t*& data) {
   unsigned result = 0;
   switch(info.bitDepth) {
   case 1:
@@ -325,13 +322,13 @@ unsigned png::readbits(const uint8_t*& data) {
   return result;
 }
 
-png::png() {
+PNG::PNG() {
 }
 
-png::~png() {
+PNG::~PNG() {
   if(data) delete[] data;
 }
 
-}
+}}
 
 #endif

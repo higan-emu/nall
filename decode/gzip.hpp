@@ -1,12 +1,12 @@
-#ifndef NALL_GZIP_HPP
-#define NALL_GZIP_HPP
+#ifndef NALL_DECODE_GZIP_HPP
+#define NALL_DECODE_GZIP_HPP
 
 #include <nall/file.hpp>
-#include <nall/inflate.hpp>
+#include <nall/decode/inflate.hpp>
 
-namespace nall {
+namespace nall { namespace Decode {
 
-struct gzip {
+struct GZIP {
   string filename;
   uint8_t* data = nullptr;
   unsigned size = 0;
@@ -14,18 +14,18 @@ struct gzip {
   inline bool decompress(const string& filename);
   inline bool decompress(const uint8_t* data, unsigned size);
 
-  inline gzip();
-  inline ~gzip();
+  inline GZIP();
+  inline ~GZIP();
 };
 
-bool gzip::decompress(const string& filename) {
+bool GZIP::decompress(const string& filename) {
   if(auto memory = file::read(filename)) {
     return decompress(memory.data(), memory.size());
   }
   return false;
 }
 
-bool gzip::decompress(const uint8_t* data, unsigned size) {
+bool GZIP::decompress(const uint8_t* data, unsigned size) {
   if(size < 18) return false;
   if(data[0] != 0x1f) return false;
   if(data[1] != 0x8b) return false;
@@ -73,13 +73,13 @@ bool gzip::decompress(const uint8_t* data, unsigned size) {
   return inflate(this->data, this->size, data + p, size - p - 8);
 }
 
-gzip::gzip() {
+GZIP::GZIP() {
 }
 
-gzip::~gzip() {
+GZIP::~GZIP() {
   if(data) delete[] data;
 }
 
-}
+}}
 
 #endif

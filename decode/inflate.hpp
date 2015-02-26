@@ -1,9 +1,9 @@
-#ifndef NALL_INFLATE_HPP
-#define NALL_INFLATE_HPP
+#ifndef NALL_DECODE_INFLATE_HPP
+#define NALL_DECODE_INFLATE_HPP
 
 #include <setjmp.h>
 
-namespace nall {
+namespace nall { namespace Decode {
 
 namespace puff {
   inline int puff(
@@ -344,6 +344,6 @@ inline int puff(
 
 }
 
-}
+}}
 
 #endif

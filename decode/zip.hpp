@@ -1,14 +1,14 @@
-#ifndef NALL_UNZIP_HPP
-#define NALL_UNZIP_HPP
+#ifndef NALL_DECODE_ZIP_HPP
+#define NALL_DECODE_ZIP_HPP
 
 #include <nall/filemap.hpp>
-#include <nall/inflate.hpp>
 #include <nall/string.hpp>
 #include <nall/vector.hpp>
+#include <nall/decode/inflate.hpp>
 
-namespace nall {
+namespace nall { namespace Decode {
 
-struct unzip {
+struct ZIP {
   struct File {
     string name;
     const uint8_t* data;
@@ -102,7 +102,7 @@ struct unzip {
     if(fm.open()) fm.close();
   }
 
-  ~unzip() {
+  ~ZIP() {
     close();
   }
 
@@ -121,6 +121,6 @@ public:
   vector<File> file;
 };
 
-}
+}}
 
 #endif
