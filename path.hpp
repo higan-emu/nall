@@ -91,7 +91,7 @@ inline auto userSettings() -> string {
   string result = {Path::user(), "Library/Application Support/"};
   #else
   string result;
-  if(const char *env = getenv("XDG_CONFIG_HOME")) {
+  if(const char* env = getenv("XDG_CONFIG_HOME")) {
     result = string(env);
   } else {
     result = {Path::user(), ".config/"};
